@@ -1,0 +1,26 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seraphim Entertainment</title>
+    <link rel="stylesheet" href="/assets/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Seraphim Entertainment</h1>
+      <button id="themeToggle">Toggle Theme</button>
+    </header>
+    <main class="show-grid">
+      <a href="/show.html?show=robloxdoctorwho" class="show-card">The Light</a>
+      <a href="/show.html?show=projectomega" class="show-card">Project Omega</a>
+      <a href="/show.html?show=forgottenrealms" class="show-card"
+        >Forgotten Realms</a
+      >
+    </main>
+    <script>
+      document.getElementById("themeToggle").onclick = () => {
+        document.body.classList.toggle("light");
+      };
+    </script>
+  </body>
+</html>

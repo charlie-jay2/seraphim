@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Show Viewer</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background: #111;
+        color: #fff;
+        font-family: Arial, sans-serif;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .season-buttons,
+      .episode-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin: 10px 0;
+      }
+
+      button {
+        background: #333;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      button:hover {
+        background: #555;
+      }
+
+      .custom-player {
+        max-width: 900px;
+        margin: 0 auto 20px;
+      }
+
+      video {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+      }
+
+      .player-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .player-controls input[type="range"] {
+        width: 150px;
+      }
+
+      .icon-btn {
+        background: none;
+        font-size: 20px;
+        padding: 5px 10px;
+      }
+
+      .icon-btn:hover {
+        background-color: #222;
+        border-radius: 6px;
+      }
+
+      #player-section {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="showTitle">Roblox Doctor Who</h1>
+
+    <div id="season-buttons" class="season-buttons"></div>
+
+    <section id="player-section">
+      <div class="custom-player">
+        <video id="videoPlayer" preload="metadata">
+          <source src="" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        <div class="player-controls">
+          <button id="playPauseBtn" class="icon-btn">⏵</button>
+          <input type="range" id="seekBar" value="0" min="0" step="0.01" />
+          <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+          <button id="muteBtn" class="icon-btn">🔊</button>
+          <input
+            type="range"
+            id="volumeBar"
+            min="0"
+            max="1"
+            step="0.01"
+            value="1" />
+          <button id="fullscreenBtn" class="icon-btn">⛶</button>
+        </div>
+      </div>
+      <div id="episode-list-below" class="episode-grid"></div>
+    </section>
+
+    <script>
+      const showData = {
+        "roblox doctor who": {
+          Season1: [
+            [
+              "https://www.dropbox.com/scl/fi/9q8gzyfovv1ti8nyu9j57/Episode1.mp4?rlkey=hfb70qir5cxbvwnahmqm5u6p6&st=1donr4fj&raw=1",
+            ],
+            [
+              "https://www.dropbox.com/scl/fi/thtybp851qd7zr0n1ch2h/Episode2.mp4?rlkey=fcopd4731fsqudo6e6kle4hwu&st=119cqvbx&raw=1",
+            ],
+            [
+              "https://www.dropbox.com/scl/fi/834gdcdfy9psuh882pj1u/Episode3.mp4?rlkey=a0krgcck78ultvm6zuy9fmtiz&st=buq4j2o1&raw=1",
+            ],
+          ],
+        },
+      };
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const show = urlParams.get("show")?.toLowerCase();
+      const showTitle = document.getElementById("showTitle");
+      const seasonButtons = document.getElementById("season-buttons");
+      const episodeGrid = document.getElementById("episode-list-below");
+      const playerSection = document.getElementById("player-section");
+      const video = document.getElementById("videoPlayer");
+
+      const playPauseBtn = document.getElementById("playPauseBtn");
+      const seekBar = document.getElementById("seekBar");
+      const currentTimeLabel = document.getElementById("currentTime");
+      const durationLabel = document.getElementById("duration");
+      const muteBtn = document.getElementById("muteBtn");
+      const volumeBar = document.getElementById("volumeBar");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+
+      const normalizedShow = show && show.replace(/\s+/g, "").toLowerCase();
+
+      const matchingShow = Object.keys(showData).find(
+        (key) => key.replace(/\s+/g, "").toLowerCase() === normalizedShow
+      );
+
+      if (matchingShow) {
+        const formattedTitle = matchingShow
+          .replace(/(^|\s)\S/g, (l) => l.toUpperCase())
+          .replace(/([a-z])([A-Z])/g, "$1 $2");
+        showTitle.textContent = formattedTitle;
+        const data = showData[matchingShow];
+
+        Object.keys(data).forEach((seasonKey) => {
+          const btn = document.createElement("button");
+          btn.textContent = seasonKey.replace(/season/i, "Season ");
+          btn.onclick = () => loadSeason(seasonKey, data);
+          seasonButtons.appendChild(btn);
+        });
+      } else {
+        showTitle.textContent = "Show not found";
+      }
+
+      function loadSeason(seasonKey, data) {
+        episodeGrid.innerHTML = "";
+        playerSection.style.display = "none";
+
+        const episodes = data[seasonKey];
+        if (episodes && episodes.length > 0) {
+          playerSection.style.display = "block";
+          episodes.forEach((ep, index) => {
+            const epBtn = document.createElement("button");
+            epBtn.textContent = `Episode ${index + 1}`;
+            epBtn.onclick = () => playEpisode(ep[0]);
+            episodeGrid.appendChild(epBtn);
+          });
+          playEpisode(episodes[0][0]);
+        }
+      }
+
+      function playEpisode(path) {
+        if (path.includes("dropbox.com") && !path.includes("raw=1")) {
+          path = path.replace("raw=0", "raw=1");
+        }
+        video.src = path;
+        video.load();
+        video.play();
+      }
+
+      playPauseBtn.onclick = () => {
+        if (video.paused) {
+          video.play();
+        } else {
+          video.pause();
+        }
+      };
+
+      video.onplay = () => (playPauseBtn.textContent = "⏸");
+      video.onpause = () => (playPauseBtn.textContent = "⏵");
+
+      video.ontimeupdate = () => {
+        seekBar.value = video.currentTime;
+        currentTimeLabel.textContent = formatTime(video.currentTime);
+      };
+
+      video.onloadedmetadata = () => {
+        seekBar.max = video.duration;
+        durationLabel.textContent = formatTime(video.duration);
+      };
+
+      seekBar.oninput = () => {
+        video.currentTime = seekBar.value;
+      };
+
+      muteBtn.onclick = () => {
+        video.muted = !video.muted;
+        muteBtn.textContent = video.muted ? "🔇" : "🔊";
+      };
+
+      volumeBar.oninput = () => {
+        video.volume = volumeBar.value;
+      };
+
+      fullscreenBtn.onclick = () => {
+        if (video.requestFullscreen) {
+          video.requestFullscreen();
+        } else if (video.webkitRequestFullscreen) {
+          video.webkitRequestFullscreen();
+        } else if (video.msRequestFullscreen) {
+          video.msRequestFullscreen();
+        }
+      };
+
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+      }
+    </script>
+  </body>
+</html>
